@@ -35,7 +35,7 @@ dependencies {
     implementation 'com.google.code.findbugs:jsr305:3.0.1' // api
     implementation "com.squareup.okhttp3:okhttp:3.8.1" // impl
 
-    implementation "com.amazonaws:aws-android-sdk-core:$aws_version" // api
+    api "com.amazonaws:aws-android-sdk-core:$aws_version" // api
     compileOnly "com.amazonaws:aws-android-sdk-cognitoidentityprovider:$aws_version"
     compileOnly "com.amazonaws:aws-android-sdk-s3:$aws_version"
 
