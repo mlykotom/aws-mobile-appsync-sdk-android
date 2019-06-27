@@ -377,6 +377,7 @@ class AppSyncOfflineMutationInterceptor implements ApolloInterceptor {
             }
         }, QUEUE_POLL_INTERVAL);
 
+
         appSyncOfflineMutationManager.updateQueueHandler(queueHandler);
         callbackMapForInMemoryMutations = new HashMap<>();
         persistentOfflineMutationObjectMap = appSyncOfflineMutationManager.persistentOfflineMutationManager.persistentOfflineMutationObjectMap;
@@ -384,6 +385,11 @@ class AppSyncOfflineMutationInterceptor implements ApolloInterceptor {
         conflictResolutionHandler =  new ConflictResolutionHandler(this);
         this.conflictResolver = conflictResolver;
     }
+
+    public void cancelMutationsPolling() {
+    	if(queueHandler == null) return;
+		queueHandler.removeCallbacksAndMessages(null);
+	}
 
     public <D extends Mutation.Data, T, V extends Mutation.Variables> void retryConflictMutation(@Nonnull Mutation<D, T, V> mutation, String uniqueIdentifierForOriginalMutation) {
 

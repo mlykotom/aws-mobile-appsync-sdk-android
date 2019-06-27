@@ -94,6 +94,7 @@ public class AWSAppSyncClient {
     //Map that houses retried mutations.
     private Map<Mutation, MutationInformation> mutationsToRetryAfterConflictResolution;
     private AppSyncOfflineMutationManager mAppSyncOfflineMutationManager = null;
+    private final AppSyncOfflineMutationInterceptor mOfflineMutationInterceptor;
 
     String querySqlStoreName = DEFAULT_QUERY_SQL_STORE_NAME;
     String mutationSqlStoreName = DEFAULT_MUTATION_SQL_STORE_NAME;
@@ -206,19 +207,21 @@ public class AWSAppSyncClient {
                 sqlCacheOperations,
                 networkInvoker);
 
+        mOfflineMutationInterceptor = new AppSyncOfflineMutationInterceptor(
+                mAppSyncOfflineMutationManager,
+                false,
+                builder.mContext,
+                mutationsToRetryAfterConflictResolution,
+                this,
+                builder.mConflictResolver,
+                builder.mMutationQueueExecutionTimeout);
+
         //Create the Apollo Client and setup the interceptor chain.
         ApolloClient.Builder clientBuilder = ApolloClient.builder()
                 .serverUrl(builder.mServerUrl)
                 .normalizedCache(builder.mNormalizedCacheFactory, builder.mResolver)
                 .addApplicationInterceptor(optimisticUpdateInterceptor)
-                .addApplicationInterceptor(new AppSyncOfflineMutationInterceptor(
-                        mAppSyncOfflineMutationManager,
-                        false,
-                        builder.mContext,
-                        mutationsToRetryAfterConflictResolution,
-                        this,
-                        builder.mConflictResolver,
-                        builder.mMutationQueueExecutionTimeout))
+                .addApplicationInterceptor(mOfflineMutationInterceptor)
                 .addApplicationInterceptor(new AppSyncComplexObjectsInterceptor(builder.mS3ObjectManager))
                 .okHttpClient(okHttpClient);
 
@@ -837,6 +840,11 @@ public class AWSAppSyncClient {
             return mAppSyncOfflineMutationManager.mutationQueueEmpty();
         }
         return true;
+    }
+
+
+    public void dispose() {
+        mOfflineMutationInterceptor.cancelMutationsPolling();
     }
 
     /**
